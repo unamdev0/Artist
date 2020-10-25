@@ -3,6 +3,7 @@ const isEmpty = require("is-empty");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const formidable=require('formidable')
+const fs = require('fs')
 const expressJwt = require("express-jwt");
 const User = require("../models/User");
 const Product = require("../models/product");
@@ -81,6 +82,7 @@ function validRegistrationDetails(data) {
 }
 
 exports.validateRegistration = (req, res) => {
+  console.log("dsfa",req.body)
   try {
     const { errors, isValid } = validRegistrationDetails(req.body);
     if (!isValid) {
@@ -147,7 +149,6 @@ exports.validateLogin = (req, res) => {
   if (!isValid) {
     return res.status(400).json(errors);
   }
-
   const email = form.email;
   const password = form.password;
   User.findOne({
@@ -273,7 +274,8 @@ exports.pushOrderInPurchaseList = (req, res, next) => {
 
 
 exports.isAuthenticated = (req, res, next) => {
-  let checker = req.profile && req.auth && req.profile._id == req.auth._id;
+  let checker = req.profile && req.auth && req.profile._id == req.auth.id;
+  console.log(typeof(req.profile._id),typeof(req.auth._id))
   if (!checker) {
     return res.status(403).json({
       error: "access denied"
@@ -394,8 +396,6 @@ exports.addProduct = (req, res) => {
     }
 
     let product = new Product(fields);
-
-    if (file.photo) {
       if (file.photo.size > 3000000) {
         return res.status(400).json({
           error: "file size too big",
@@ -403,7 +403,6 @@ exports.addProduct = (req, res) => {
       }
       product.photo.data = fs.readFileSync(file.photo.path);
       product.photo.contentType = file.photo.type;
-    }
 
     product.save((error, product) => {
       if (error) {
